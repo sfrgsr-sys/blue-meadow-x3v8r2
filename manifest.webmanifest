@@ -1,9 +1,10 @@
 {
+  "id": "/blue-meadow-x3v8r2/fpac-planner",
   "name": "FPAC Study Planner",
   "short_name": "FPAC Planner",
   "description": "PQ4R study plan for the AFP FPAC exam",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/blue-meadow-x3v8r2/",
+  "scope": "/blue-meadow-x3v8r2/",
   "display": "standalone",
   "background_color": "#D9ECFF",
   "theme_color": "#D9ECFF",
