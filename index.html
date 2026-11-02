@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#D9ECFF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0F1A2C" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>FPAC Study Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -169,6 +169,13 @@ input[type=number],input[type=date]{background:var(--surface-2);border:2px solid
 @media (max-width:480px){.donedate{align-items:flex-start}}
 .bklabel{font-size:12.5px;font-weight:800;color:var(--muted)}
 textarea{font:inherit;font-size:12.5px;width:100%;color:var(--ink);background:var(--surface-2);border:2px solid var(--outline);border-radius:12px;padding:8px 10px;resize:vertical}
+.view{display:flex;flex-direction:column;gap:20px}
+.wrap{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;background:var(--surface);border-top:2.5px solid var(--outline);padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.tabbar-in{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:420px}
+.tab{font:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:16px;border:2px solid transparent;background:none;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer}
+.tab[aria-current="page"]{background:var(--accent);border-color:var(--outline);color:var(--accent-ink)}
 @media (prefers-reduced-motion:reduce){.ear{animation:none}}
 </style>
 </head>
@@ -184,6 +191,7 @@ textarea{font:inherit;font-size:12.5px;width:100%;color:var(--ink);background:va
     <div class="sync" id="sync">Loading your progress…</div>
   </header>
 
+  <div id="view-plan" class="view">
   <section class="strip" aria-label="Summary">
     <div class="stat"><span class="eyebrow">Material done</span><span class="v mono" id="sPct">0%</span><div class="bar"><i id="sBar" style="width:0"></i></div></div>
     <div class="stat"><span class="eyebrow">Days to exam</span><span class="v mono" id="sDays">–</span><span class="s" id="sStudyDays"></span></div>
@@ -201,6 +209,14 @@ textarea{font:inherit;font-size:12.5px;width:100%;color:var(--ink);background:va
         <p class="upnext" id="upNext"></p>
       </section>
 
+    </aside>
+
+    <main class="chapters" id="chapters" aria-label="Syllabus"></main>
+  </div>
+  </div>
+  <div id="view-settings" class="view" hidden>
+    <div><div class="eyebrow">Your plan updates as soon as you change anything here</div><h2 style="font-size:24px">Settings</h2></div>
+    <div class="settings-grid">
       <section class="panel" aria-labelledby="setH">
         <h2 id="setH">Plan settings</h2>
         <form class="settings" id="settings" onsubmit="return false">
@@ -209,10 +225,10 @@ textarea{font:inherit;font-size:12.5px;width:100%;color:var(--ink);background:va
           <label>Minutes I can study per day<input type="number" id="minutes" min="15" max="600" step="5"></label>
           <label>Minutes per knowledge point<input type="number" id="kpMin" min="1" max="30" step="0.5"></label>
           <div class="full"><div class="eyebrow" style="margin-bottom:6px">How dates are set</div><div class="days modes" id="modes"><button type="button" data-m="fit">Fit my exam date</button><button type="button" data-m="pace">My daily pace</button></div></div>
-          <label class="full">Chapters not added yet<input type="number" id="future" min="0" max="40"></label>
+          <label class="full" hidden>Chapters not added yet<input type="number" id="future" min="0" max="40"></label>
           <div class="full"><div class="eyebrow" style="margin-bottom:6px">Study days</div><div class="days" id="days"></div></div>
         </form>
-        <p class="hint">Lessons are sized by knowledge points with the full PQ4R cycle. Raise minutes per knowledge point if lessons take you longer. "Fit my exam date" spreads what's left evenly so you finish before the final review. "My daily pace" uses your minutes per day and shows the finish date that gives. Unadded chapters are forecast at the average size of the ones loaded.</p>
+        <p class="hint">Lessons are sized by knowledge points with the full PQ4R cycle. Raise minutes per knowledge point if lessons take you longer. "Fit my exam date" spreads what's left evenly so you finish before the final review. "My daily pace" uses your minutes per day and shows the finish date that gives.</p>
       </section>
       <section class="panel" aria-labelledby="bkH">
         <h2 id="bkH">Backup</h2>
@@ -225,11 +241,15 @@ textarea{font:inherit;font-size:12.5px;width:100%;color:var(--ink);background:va
         <button type="button" class="btn" id="restoreBk">Replace my progress</button>
         <p class="hint" id="bkMsg" role="status"></p>
       </section>
-    </aside>
-
-    <main class="chapters" id="chapters" aria-label="Syllabus"></main>
+    </div>
   </div>
 </div>
+<nav class="tabbar" aria-label="Pages">
+  <div class="tabbar-in">
+    <button type="button" class="tab" data-view="plan" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="4"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3"/></svg>My plan</button>
+    <button type="button" class="tab" data-view="settings"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></svg>Settings</button>
+  </div>
+</nav>
 
 <script>
 /* ---------- Syllabus (from the AFP Learning System screenshots) ---------- */
@@ -524,7 +544,7 @@ function render(){
     const it = ITEMS.find(x=>x.id===k);
     if(!it) return `<li><span>Forecast chapter<small>Not added yet</small></span></li>`;
     const st = statusOf(it);
-    const nextStep = it.type==="r" ? STEPS[(state.items[k]?.steps||[]).findIndex(x=>!x)] || "Review" : TYPE_LABEL[it.type];
+    const nextStep = it.type==="r" ? (()=>{ const st=state.items[k]?.steps||[]; const i=STEPS.findIndex((_,j)=>!st[j]); return i<0?"Review":STEPS[i]; })() : TYPE_LABEL[it.type];
     return `<li><span>${esc(it.name)}<small>${shortCh(it)} · ${st==="unsure"?"Re-study":"Next: "+nextStep}</small></span><span class="mono" style="font-size:12px">${hm(remaining(it))}</span></li>`;
   }).join("");
   const nextIt = ITEMS.find(it => remaining(it)>0 && !S.todayKeys.includes(it.id));
@@ -626,6 +646,16 @@ document.getElementById("restoreBk").onclick = e => {
   document.getElementById("restoreText").value = "";
   msg.textContent = "Restored. Your plan has been updated.";
 };
+
+/* ---------- Pages ---------- */
+document.querySelector(".tabbar").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if(!b) return;
+  const v = b.dataset.view;
+  document.getElementById("view-plan").hidden = v!=="plan";
+  document.getElementById("view-settings").hidden = v!=="settings";
+  document.querySelectorAll(".tab").forEach(t => t.dataset.view===v ? t.setAttribute("aria-current","page") : t.removeAttribute("aria-current"));
+  window.scrollTo(0,0);
+});
 
 /* ---------- Boot ---------- */
 state = merge(lsGet());
